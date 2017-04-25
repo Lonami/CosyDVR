@@ -188,7 +188,6 @@ public class CosyDVR extends Activity{
 
   public void updateinterface(){
 	  if(mBound) {
-		favButton.setText(getString(R.string.fav) + " [" + mService.isFavorite() + "]");
 		if(mService.isRecording()) {
 			recButton.setText(getString(R.string.restart));
 		} else {
@@ -197,16 +196,11 @@ public class CosyDVR extends Activity{
 
 	  }
 	}
-  
+
  Button.OnClickListener favButtonOnClickListener
   = new Button.OnClickListener(){
   @Override
   public void onClick(View v) {
-   // TODO Auto-generated method stub
-	  if(mBound) {
-		  mService.toggleFavorite();
-		  favButton.setText(getString(R.string.fav) + " [" + mService.isFavorite() + "]");
-	  }
  }};
 
   Button.OnClickListener recButtonOnClickListener
