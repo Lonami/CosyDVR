@@ -1,4 +1,4 @@
-package es.esy.CosyDVR;
+package io.github.lonamiwebs.hidrok;
 
 import android.app.Activity;
 import android.content.BroadcastReceiver;
@@ -21,8 +21,10 @@ import android.content.ServiceConnection;
 import android.graphics.Point;
 import android.os.IBinder;
 
+import io.github.lonamiwebs.R;
 
-public class CosyDVR extends Activity{
+
+public class Hidrok extends Activity{
 
     BackgroundVideoRecorder mService;
     Button prefsButton, recButton, focusButton, flashButton, exitButton;
@@ -61,7 +63,7 @@ public class CosyDVR extends Activity{
 
         recording = false;
 
-        CosySettings settings = new CosySettings(this);
+        HidrokSettings settings = new HidrokSettings(this);
         if (settings.getReverseLandscape()) {
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE);
         } else {
@@ -174,7 +176,7 @@ public class CosyDVR extends Activity{
         @Override
         public void onClick(View v) {
             mService.ChangeSurface(1, 1);
-            Intent myIntent = new Intent(getApplicationContext(), CosyDVRPreferenceActivity.class);
+            Intent myIntent = new Intent(getApplicationContext(), HidrokPreferenceActivity.class);
             startActivity(myIntent);
         }
     };
@@ -217,11 +219,11 @@ public class CosyDVR extends Activity{
         @Override
         public boolean onLongClick(View v) {
             if (mBound) {
-                unbindService(CosyDVR.this.mConnection);
-                CosyDVR.this.mBound = false;
+                unbindService(Hidrok.this.mConnection);
+                Hidrok.this.mBound = false;
             }
-            stopService(new Intent(CosyDVR.this, BackgroundVideoRecorder.class));
-            CosyDVR.this.finish();
+            stopService(new Intent(Hidrok.this, BackgroundVideoRecorder.class));
+            Hidrok.this.finish();
             return true;
         }
     };
@@ -246,7 +248,7 @@ public class CosyDVR extends Activity{
         }
     };
 
-    private IntentFilter filter = new IntentFilter("es.esy.CosyDVR.updateInterface");
+    private IntentFilter filter = new IntentFilter("io.github.lonamiwebs.hidrok.updateInterface");
 
     private BroadcastReceiver receiver = new BroadcastReceiver() {
 

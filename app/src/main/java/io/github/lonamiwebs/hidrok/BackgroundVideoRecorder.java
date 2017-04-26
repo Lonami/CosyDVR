@@ -1,4 +1,4 @@
-package es.esy.CosyDVR;
+package io.github.lonamiwebs.hidrok;
 
 import android.annotation.SuppressLint;
 import android.app.PendingIntent;
@@ -44,6 +44,8 @@ import java.lang.String;
 import android.os.PowerManager;
 import android.widget.Toast;
 
+import io.github.lonamiwebs.R;
+
 public class BackgroundVideoRecorder extends Service implements
         SurfaceHolder.Callback, MediaRecorder.OnInfoListener {
     // Settings
@@ -60,7 +62,7 @@ public class BackgroundVideoRecorder extends Service implements
     public String SD_CARD_PATH =
             Environment.getExternalStorageDirectory().getAbsolutePath();
 
-    public String BASE_FOLDER = "/Android/data/es.esy.CosyDVR/files"; // KitKat fix
+    public String BASE_FOLDER = "/Android/data/io.github.lonamiwebs.hidrok/files"; // KitKat fix
     public String FAV_FOLDER = "/fav/";
     public String TEMP_FOLDER = "/temp/";
 
@@ -75,7 +77,6 @@ public class BackgroundVideoRecorder extends Service implements
     private MediaRecorder mediaRecorder;
     private boolean isRecording;
     private int focusMode;
-    private int sceneMode;
     private int flashMode;
     private int zoomFactor;
     private String currentFile;
@@ -100,7 +101,7 @@ public class BackgroundVideoRecorder extends Service implements
     private String[] mFlashModes = { Parameters.FLASH_MODE_OFF,
             Parameters.FLASH_MODE_TORCH, };
 
-    private CosySettings settings;
+    private HidrokSettings settings;
 
     @SuppressLint("HandlerLeak")
     private final class HandlerExtension extends Handler {
@@ -155,20 +156,21 @@ public class BackgroundVideoRecorder extends Service implements
 
     @Override
     public void onCreate() {
-        settings = new CosySettings(this);
+        settings = new HidrokSettings(this);
 
         AUTO_START = settings.getAutoStart();
         REVERSE_ORIENTATION = settings.getReverseLandscape();
         SD_CARD_PATH = settings.getSdCardPath();
 
         // Start foreground service to avoid unexpected kill
-        Intent myIntent = new Intent(this, CosyDVR.class);
+        Intent myIntent = new Intent(this, Hidrok.class);
         myIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, myIntent, 0);
 
+        // TODO Allow changing this text so people can't tell the application
         Notification notification = new Notification.Builder(this)
-                .setContentTitle("CosyDVR Background Recorder Service")
-                .setContentText("") .setSmallIcon(R.drawable.cosydvricon)
+                .setContentTitle("Hidrok Recorder Service")
+                .setContentText("") .setSmallIcon(R.mipmap.ic_launcher)
                 .setContentIntent(pendingIntent)
                 .build();
         startForeground(1, notification);
@@ -217,7 +219,7 @@ public class BackgroundVideoRecorder extends Service implements
         surfaceView.getHolder().addCallback(this);
         PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
         mWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK,
-                "CosyDVRWakeLock");
+                "HidrokWakeLock");
 
         mHandler = new HandlerExtension();
     }
@@ -264,7 +266,7 @@ public class BackgroundVideoRecorder extends Service implements
 
     public void UpdateLayoutInterface() {
         Intent intent = new Intent();
-        intent.setAction("es.esy.CosyDVR.updateInterface");
+        intent.setAction("io.github.lonamiwebs.hidrok.updateInterface");
         sendBroadcast(intent);
     }
 
@@ -286,12 +288,12 @@ public class BackgroundVideoRecorder extends Service implements
         SD_CARD_PATH = settings.getSdCardPath();
 
         // Create temp and favourite folders
-        File mFolder = new File(SD_CARD_PATH + BASE_FOLDER + TEMP_FOLDER); //"/CosyDVR/temp/");
+        File mFolder = new File(SD_CARD_PATH + BASE_FOLDER + TEMP_FOLDER);
         if (!mFolder.exists()) {
             if (!mFolder.mkdirs())
                 Log.w("BackgroundVideoRecorder", "Could not create "+mFolder);
         }
-        mFolder = new File(SD_CARD_PATH + BASE_FOLDER + FAV_FOLDER); //"/CosyDVR/fav/");
+        mFolder = new File(SD_CARD_PATH + BASE_FOLDER + FAV_FOLDER);
         if (!mFolder.exists()) {
             if (!mFolder.mkdirs())
                 Log.w("BackgroundVideoRecorder", "Could not create "+mFolder);
@@ -370,7 +372,7 @@ public class BackgroundVideoRecorder extends Service implements
                         new Date().getTime()).toString();
 
                 // If we write to file
-                mediaRecorder.setOutputFile(SD_CARD_PATH + BASE_FOLDER + TEMP_FOLDER //"/CosyDVR/temp/"
+                mediaRecorder.setOutputFile(SD_CARD_PATH + BASE_FOLDER + TEMP_FOLDER //"/Hidrok/temp/"
                         + currentFile + VIDEO_FILE_EXT);
 
                 // Step 4: Set the preview output
@@ -396,7 +398,7 @@ public class BackgroundVideoRecorder extends Service implements
     }
 
     public void freeSpace() {
-        File dir = new File(SD_CARD_PATH + BASE_FOLDER + TEMP_FOLDER); //"/CosyDVR/temp/");
+        File dir = new File(SD_CARD_PATH + BASE_FOLDER + TEMP_FOLDER); //"/Hidrok/temp/");
         File[] fileList = dir.listFiles();
         Arrays.sort(fileList, new Comparator<File>() {
             public int compare(File f1, File f2) {

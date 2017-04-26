@@ -5,7 +5,7 @@ android {
     buildToolsVersion "25.0.2"
 
     defaultConfig {
-        applicationId "es.esy.CosyDVR"
+        applicationId "io.github.lonamiwebs.hidrok"
         minSdkVersion 16
         targetSdkVersion 17
     }

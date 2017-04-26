@@ -1,4 +1,4 @@
-package es.esy.CosyDVR;
+package io.github.lonamiwebs.hidrok;
 
 import android.os.Bundle;
 import android.content.SharedPreferences;
@@ -8,12 +8,12 @@ import android.preference.EditTextPreference;
 import android.preference.ListPreference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
-import android.preference.PreferenceManager;
-import es.esy.CosyDVR.StorageUtils;
-import java.util.Map;
-import java.util.Map.Entry;
 
-public class CosyDVRPreferenceActivity extends PreferenceActivity  {
+import io.github.lonamiwebs.R;
+
+import java.util.Map;
+
+public class HidrokPreferenceActivity extends PreferenceActivity  {
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

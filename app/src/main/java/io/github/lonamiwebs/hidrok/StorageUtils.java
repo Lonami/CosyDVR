@@ -1,5 +1,5 @@
 // Original: stackoverflow.com/q/5694933
-package es.esy.CosyDVR;
+package io.github.lonamiwebs.hidrok;
 
 import java.io.FileReader;
 import java.io.BufferedReader;

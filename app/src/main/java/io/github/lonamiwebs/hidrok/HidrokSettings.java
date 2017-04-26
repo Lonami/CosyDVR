@@ -1,14 +1,14 @@
-package es.esy.CosyDVR;
+package io.github.lonamiwebs.hidrok;
 
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Environment;
 import android.preference.PreferenceManager;
 
-class CosySettings {
+class HidrokSettings {
     private final SharedPreferences prefs;
 
-    CosySettings(final Context context) {
+    HidrokSettings(final Context context) {
         prefs = PreferenceManager.getDefaultSharedPreferences(context);
     }
 
