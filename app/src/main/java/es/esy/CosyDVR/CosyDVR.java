@@ -25,7 +25,7 @@ import android.os.IBinder;
 public class CosyDVR extends Activity{
 
     BackgroundVideoRecorder mService;
-    Button favButton, recButton, flsButton, exiButton, focButton;
+    Button prefsButton, recButton, focusButton, flashButton, exitButton;
     View mainView;
     boolean mBound = false;
     boolean recording = false;
@@ -71,19 +71,18 @@ public class CosyDVR extends Activity{
 
         setContentView(R.layout.main);
 
-        favButton = (Button)findViewById(R.id.fav_button);
+        prefsButton = (Button)findViewById(R.id.prefs_button);
         recButton = (Button)findViewById(R.id.rec_button);
-        focButton = (Button)findViewById(R.id.foc_button);
-        flsButton = (Button)findViewById(R.id.fls_button);
-        exiButton = (Button)findViewById(R.id.exi_button);
+        focusButton = (Button)findViewById(R.id.focus_button);
+        flashButton = (Button)findViewById(R.id.flash_button);
+        exitButton = (Button)findViewById(R.id.exit_button);
         mainView = findViewById(R.id.mainview);
 
-        favButton.setOnClickListener(favButtonOnClickListener);
+        prefsButton.setOnClickListener(prefsButtonOnClickListener);
         recButton.setOnClickListener(recButtonOnClickListener);
-        focButton.setOnClickListener(focButtonOnClickListener);
-        flsButton.setOnClickListener(flsButtonOnClickListener);
-        exiButton.setOnLongClickListener(exiButtonOnLongClickListener);
-        recButton.setOnLongClickListener(recButtonOnLongClickListener);
+        focusButton.setOnClickListener(focButtonOnClickListener);
+        flashButton.setOnClickListener(flsButtonOnClickListener);
+        exitButton.setOnLongClickListener(exiButtonOnLongClickListener);
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         final ScaleGestureDetector mScaleDetector = new ScaleGestureDetector(this, new ScaleListener());
@@ -125,7 +124,7 @@ public class CosyDVR extends Activity{
             Point size = new Point();
             display.getSize(size);
             mWidth = size.x;
-            mHeight = size.y - favButton.getHeight();
+            mHeight = size.y - prefsButton.getHeight();
 
             Intent intent = new Intent(getApplicationContext(), BackgroundVideoRecorder.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -144,7 +143,7 @@ public class CosyDVR extends Activity{
     }
 
     @Override
-    public void onPause(){
+    public void onPause() {
         if (mBound) {
             mService.ChangeSurface(1, 1);
         }
@@ -153,7 +152,7 @@ public class CosyDVR extends Activity{
     }
 
     @Override
-    public void onResume(){
+    public void onResume() {
         if (mBound) {
             mService.ChangeSurface(mWidth, mHeight);
         }
@@ -161,7 +160,7 @@ public class CosyDVR extends Activity{
         this.registerReceiver(receiver,filter);
     }
 
-    public void updateInterface(){
+    public void updateInterface() {
         if (mBound) {
             if (mService.isRecording()) {
                 recButton.setText(getString(R.string.stop));
@@ -171,15 +170,16 @@ public class CosyDVR extends Activity{
         }
     }
 
-    Button.OnClickListener favButtonOnClickListener
-            = new Button.OnClickListener(){
+    Button.OnClickListener prefsButtonOnClickListener = new Button.OnClickListener() {
         @Override
         public void onClick(View v) {
-        }};
+            mService.ChangeSurface(1, 1);
+            Intent myIntent = new Intent(getApplicationContext(), CosyDVRPreferenceActivity.class);
+            startActivity(myIntent);
+        }
+    };
 
-    Button.OnClickListener recButtonOnClickListener
-            = new Button.OnClickListener(){
-
+    Button.OnClickListener recButtonOnClickListener = new Button.OnClickListener() {
         @Override
         public void onClick(View v) {
             mService.setMute(true);
@@ -191,55 +191,31 @@ public class CosyDVR extends Activity{
                 recButton.setText(getString(R.string.stop));
             }
             mService.setMute(false);
-        }};
+        }
+    };
 
-    Button.OnClickListener focButtonOnClickListener
-            = new Button.OnClickListener(){
+    Button.OnClickListener focButtonOnClickListener = new Button.OnClickListener() {
         @Override
         public void onClick(View v) {
             if (mBound) {
                 mService.toggleFocus();
-                focButton.setText(getString(R.string.focus) + " [" + mFocusNames[mService.getFocusMode()] + "]");
+                focusButton.setText(getString(R.string.focus) + " [" + mFocusNames[mService.getFocusMode()] + "]");
             }
-        }};
+        }
+    };
 
-    Button.OnClickListener flsButtonOnClickListener
-            = new Button.OnClickListener(){
+    Button.OnClickListener flsButtonOnClickListener = new Button.OnClickListener() {
         @Override
         public void onClick(View v) {
             if (mBound) {
                 mService.toggleFlash();
             }
-        }};
+        }
+    };
 
-    Button.OnLongClickListener recButtonOnLongClickListener
-            = new Button.OnLongClickListener(){
+    Button.OnLongClickListener exiButtonOnLongClickListener = new Button.OnLongClickListener() {
         @Override
         public boolean onLongClick(View v) {
-            mService.ChangeSurface(1, 1);
-            Intent myIntent = new Intent(getApplicationContext(), CosyDVRPreferenceActivity.class);
-            startActivity(myIntent);
-            //mService.ChangeSurface(mWidth, mHeight);	//size will be returned with app focus
-            return true;
-        }};
-
-    Button.OnLongClickListener exiButtonOnLongClickListener
-            = new Button.OnLongClickListener(){
-        @Override
-        public boolean onLongClick(View v) {
-/*	if (SystemClock.elapsedRealtime() > (ExitPressTime + 1000)
-	   && SystemClock.elapsedRealtime() < (ExitPressTime + 2000)) {
-		if (mBound) {
-			unbindService(CosyDVR.this.mConnection);
-			CosyDVR.this.mBound = false;
-		}
-		stopService(new Intent(CosyDVR.this, BackgroundVideoRecorder.class));
-		CosyDVR.this.finish();
-		//System.exit(0);
-	} else {
-		ExitPressTime = SystemClock.elapsedRealtime();
-		//Toast.makeText(CosyDVR.this, R.string.exit_again, Toast.LENGTH_LONG).show();
-	}*/
             if (mBound) {
                 unbindService(CosyDVR.this.mConnection);
                 CosyDVR.this.mBound = false;
@@ -247,7 +223,8 @@ public class CosyDVR extends Activity{
             stopService(new Intent(CosyDVR.this, BackgroundVideoRecorder.class));
             CosyDVR.this.finish();
             return true;
-        }};
+        }
+    };
 
     private ServiceConnection mConnection = new ServiceConnection() {
 
@@ -255,15 +232,11 @@ public class CosyDVR extends Activity{
         public void onServiceConnected(ComponentName className,
                                        IBinder service) {
             // We've bound to LocalService, cast the IBinder and get LocalService instance
-            BackgroundVideoRecorder.LocalBinder binder = (BackgroundVideoRecorder.LocalBinder) service;
+            BackgroundVideoRecorder.LocalBinder binder =
+                    (BackgroundVideoRecorder.LocalBinder)service;
+
             mService = binder.getService();
             mBound = true;
-        /*if (!mService.isRecording()){
-       	 	//stopService(new Intent(CosyDVR.this, BackgroundVideoRecorder.class));
-       	 	recButton.setText(getString(R.string.rec));
-        }else{
-            recButton.setText(getString(R.string.stop));
-        }*/
             mService.ChangeSurface(mWidth, mHeight);
         }
 
@@ -271,12 +244,11 @@ public class CosyDVR extends Activity{
         public void onServiceDisconnected(ComponentName arg0) {
             mBound = false;
         }
-
     };
 
     private IntentFilter filter = new IntentFilter("es.esy.CosyDVR.updateInterface");
 
-    private BroadcastReceiver receiver = new BroadcastReceiver(){
+    private BroadcastReceiver receiver = new BroadcastReceiver() {
 
         @Override
         public void onReceive(Context c, Intent i) {

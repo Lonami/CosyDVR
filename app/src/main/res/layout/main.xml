@@ -17,13 +17,13 @@
         android:orientation="horizontal" >
 
         <Button
-            android:id="@+id/fav_button"
+            android:id="@+id/prefs_button"
             style="android:buttonBarStyle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:background="@drawable/blue_button"
-            android:text="@string/fav"
+            android:text="@string/prefs"
             android:textSize="12sp" />
 
         <Button
@@ -37,7 +37,7 @@
             android:textSize="12sp" />
 
         <Button
-            android:id="@+id/foc_button"
+            android:id="@+id/focus_button"
             style="android:buttonBarStyle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -47,7 +47,7 @@
             android:textSize="12sp" />
 
         <Button
-            android:id="@+id/fls_button"
+            android:id="@+id/flash_button"
             style="android:buttonBarStyle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -57,7 +57,7 @@
             android:textSize="12sp" />
 
         <Button
-            android:id="@+id/exi_button"
+            android:id="@+id/exit_button"
             style="android:buttonBarStyle"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

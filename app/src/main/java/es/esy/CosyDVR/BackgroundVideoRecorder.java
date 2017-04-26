@@ -426,7 +426,7 @@ public class BackgroundVideoRecorder extends Service implements
     }
 
     public void applyCameraParameters() {
-        if (camera != null) {
+        if (camera != null && isRecording) {
             Parameters parameters = camera.getParameters();
             if (parameters.getSupportedFocusModes().contains(mFocusModes[focusMode])) {
                 parameters.setFocusMode(mFocusModes[focusMode]);
@@ -447,7 +447,7 @@ public class BackgroundVideoRecorder extends Service implements
     }
 
     public void toggleFocus() {
-        if (camera != null) {
+        if (camera != null && isRecording) {
             Parameters parameters = camera.getParameters();
             do {
                 focusMode = (focusMode + 1) % mFocusModes.length;
@@ -458,7 +458,7 @@ public class BackgroundVideoRecorder extends Service implements
     }
 
     public void toggleFlash() {
-        if (camera != null) {
+        if (camera != null && isRecording) {
             Parameters parameters = camera.getParameters();
             do {
                 flashMode = (flashMode + 1) % mFlashModes.length;
@@ -469,7 +469,7 @@ public class BackgroundVideoRecorder extends Service implements
     }
 
     public void setZoom(float mval) {
-        if (camera != null) {
+        if (camera != null && isRecording) {
             Parameters parameters = camera.getParameters();
             if (parameters.isZoomSupported()) {
                 zoomFactor = (int) (parameters.getMaxZoom() * (mval - 4) / 10.0);
