@@ -24,19 +24,19 @@ public class CosySettings {
     }
 
     int getMaxVideoBitRate() {
-        return prefs.getInt("video_bitrate", 5000000);
+        return getInt("video_bitrate", 5000000);
     }
 
     int getVideoWidth() {
-        return prefs.getInt("video_width", 1280);
+        return getInt("video_width", 1280);
     }
 
     int getVideoHeight() {
-        return prefs.getInt("video_height", 720);
+        return getInt("video_height", 720);
     }
 
     int getVideoFrameRate() {
-        return prefs.getInt("video_frame_rate", 30);
+        return getInt("video_frame_rate", 30);
     }
 
     int getTimeLapseFactor() {
@@ -44,19 +44,24 @@ public class CosySettings {
     }
 
     int getMaxVideoDuration() {
-        return prefs.getInt("video_duration", 600000);
+        return getInt("video_duration", 600000);
     }
 
     int getMaxTempFolderSize() {
-        return prefs.getInt("max_temp_folder_size", 600000);
+        return getInt("max_temp_folder_size", 600000);
     }
 
     int getMinFreeSpace() {
-        return prefs.getInt("min_free_space", 600000);
+        return getInt("min_free_space", 600000);
     }
 
     String getSdCardPath() {
         return prefs.getString("sd_card_path", Environment
                 .getExternalStorageDirectory().getAbsolutePath());
+    }
+
+    private int getInt(String name, int defaultValue) {
+        String value = prefs.getString(name, null);
+        return value == null ? defaultValue : Integer.valueOf(value);
     }
 }
