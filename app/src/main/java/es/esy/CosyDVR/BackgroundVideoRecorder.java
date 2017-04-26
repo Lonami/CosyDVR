@@ -41,6 +41,7 @@ import java.lang.String;
 //import java.net.UnknownHostException;
 
 import android.os.PowerManager;
+import android.widget.Toast;
 
 public class BackgroundVideoRecorder extends Service implements
         SurfaceHolder.Callback, MediaRecorder.OnInfoListener {
@@ -282,14 +283,10 @@ public class BackgroundVideoRecorder extends Service implements
         sendBroadcast(intent);
     }
 
-    public void RestartRecording() {
+    public void setMute(boolean mute) {
         AudioManager manager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-        manager.setStreamSolo(AudioManager.STREAM_SYSTEM, true);
-        manager.setStreamMute(AudioManager.STREAM_SYSTEM, true);
-        StopRecording();
-        StartRecording();
-        manager.setStreamMute(AudioManager.STREAM_SYSTEM, false);
-        manager.setStreamSolo(AudioManager.STREAM_SYSTEM, false);
+        manager.setStreamSolo(AudioManager.STREAM_SYSTEM, mute);
+        manager.setStreamMute(AudioManager.STREAM_SYSTEM, mute);
     }
 
     public void StartRecording() {
@@ -506,13 +503,6 @@ public class BackgroundVideoRecorder extends Service implements
         }
     }
 
-    public void toggleTimeLapse() {
-        if (camera != null) {
-            timeLapseMode = (timeLapseMode +1)%2;
-            RestartRecording();
-        }
-    }
-
     public void setZoom(float mval) {
         if (camera != null) {
             Parameters parameters = camera.getParameters();
@@ -586,7 +576,8 @@ public class BackgroundVideoRecorder extends Service implements
     @Override
     public void onInfo(MediaRecorder mr, int what, int extra) {
         if (what == MediaRecorder.MEDIA_RECORDER_INFO_MAX_DURATION_REACHED) {
-            this.RestartRecording();
+            Toast.makeText(this, R.string.max_duration_reached, Toast.LENGTH_LONG).show();
+            StopRecording();
         }
     }
 

@@ -88,7 +88,7 @@
                         <Preference
                         android:key="instruction_restart"
                         android:selectable="false"
-                        android:title="@string/restart"
+                        android:title="@string/stop"
                         android:summary="Starts/Restarts video recording\nLong press = PREFERENCES." />
                         <Preference
                         android:key="instruction_focus"

@@ -170,7 +170,7 @@ public class CosyDVR extends Activity{
     public void updateInterface(){
         if(mBound) {
             if(mService.isRecording()) {
-                recButton.setText(getString(R.string.restart));
+                recButton.setText(getString(R.string.stop));
             } else {
                 recButton.setText(getString(R.string.start));
             }
@@ -189,15 +189,15 @@ public class CosyDVR extends Activity{
 
         @Override
         public void onClick(View v) {
-            // TODO Auto-generated method stub
-/* if(mService.isRecording()){
-	 recButton.setText(getString(R.string.rec));
- }else{
-     recButton.setText(getString(R.string.stop));
- }
- 	 mService.toggleRecording();
-*/
-            mService.RestartRecording(); //stop
+            mService.setMute(true);
+            if (mService.isRecording()) {
+                mService.StopRecording();
+                recButton.setText(getString(R.string.start));
+            } else {
+                mService.StartRecording();
+                recButton.setText(getString(R.string.stop));
+            }
+            mService.setMute(false);
         }};
 
     Button.OnClickListener focButtonOnClickListener
@@ -249,7 +249,7 @@ public class CosyDVR extends Activity{
         @Override
         public boolean onLongClick(View v) {
             if(mBound) {
-                mService.toggleTimeLapse();
+                //mService.toggleTimeLapse();
             }
             return true;
         }};
