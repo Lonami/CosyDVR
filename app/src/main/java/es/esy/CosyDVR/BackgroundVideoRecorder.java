@@ -97,9 +97,6 @@ public class BackgroundVideoRecorder extends Service implements
             Parameters.FOCUS_MODE_CONTINUOUS_VIDEO, Parameters.FOCUS_MODE_AUTO,
             Parameters.FOCUS_MODE_MACRO, Parameters.FOCUS_MODE_EDOF, };
 
-    private String[] mSceneModes = { Parameters.SCENE_MODE_AUTO,
-            Parameters.SCENE_MODE_NIGHT, };
-
     private String[] mFlashModes = { Parameters.FLASH_MODE_OFF,
             Parameters.FLASH_MODE_TORCH, };
 
@@ -345,7 +342,7 @@ public class BackgroundVideoRecorder extends Service implements
             mWakeLock.acquire();
             try {
                 camera = Camera.open(/* CameraInfo.CAMERA_FACING_BACK */);
-                if(REVERSE_ORIENTATION) {
+                if (REVERSE_ORIENTATION) {
                     camera.setDisplayOrientation(180);
                 } else {
                     camera.setDisplayOrientation(0);
@@ -382,7 +379,7 @@ public class BackgroundVideoRecorder extends Service implements
                 mediaRecorder.setMaxDuration(MAX_VIDEO_DURATION);
                 mediaRecorder.setMaxFileSize(0); // 0 - no limit
                 mediaRecorder.setOnInfoListener(this);
-                if(REVERSE_ORIENTATION) {
+                if (REVERSE_ORIENTATION) {
                     mediaRecorder.setOrientationHint(180);
                 } else {
                     mediaRecorder.setOrientationHint(0);
@@ -431,14 +428,13 @@ public class BackgroundVideoRecorder extends Service implements
     public void applyCameraParameters() {
         if (camera != null) {
             Parameters parameters = camera.getParameters();
-            if(parameters.getSupportedFocusModes().contains(mFocusModes[focusMode])) {
+            if (parameters.getSupportedFocusModes().contains(mFocusModes[focusMode])) {
                 parameters.setFocusMode(mFocusModes[focusMode]);
             }
-            if(parameters.getSupportedSceneModes() != null
-                    && parameters.getSupportedSceneModes().contains(mSceneModes[sceneMode])) {
-                parameters.setSceneMode(mSceneModes[sceneMode]);
-            }
-            if(parameters.getSupportedFlashModes() != null
+            // We could potentially set Parameters.SCENE_MODE_X here after checking:
+            //    parameters.getSupportedSceneModes() != null &&
+            //    parameters.getSupportedSceneModes().contains(Parameters.SCENE_MODE_X)
+            if (parameters.getSupportedFlashModes() != null
                     && parameters.getSupportedFlashModes().contains(mFlashModes[flashMode])) {
                 parameters.setFlashMode(mFlashModes[flashMode]);
             }
@@ -457,17 +453,6 @@ public class BackgroundVideoRecorder extends Service implements
                 focusMode = (focusMode + 1) % mFocusModes.length;
             } while (!parameters.getSupportedFocusModes().contains(
                     mFocusModes[focusMode])); // SKIP unsupported modes
-            applyCameraParameters();
-        }
-    }
-
-    public void toggleNight() {
-        if (camera != null) {
-            Parameters parameters = camera.getParameters();
-            do {
-                sceneMode = (sceneMode + 1) % mSceneModes.length;
-            } while (!parameters.getSupportedSceneModes().contains(
-                    mSceneModes[sceneMode])); // SKIP unsupported modes
             applyCameraParameters();
         }
     }

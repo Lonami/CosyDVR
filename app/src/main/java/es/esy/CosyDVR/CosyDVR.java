@@ -25,13 +25,12 @@ import android.os.IBinder;
 public class CosyDVR extends Activity{
 
     BackgroundVideoRecorder mService;
-    Button favButton,recButton,flsButton,exiButton,focButton,nigButton;
+    Button favButton, recButton, flsButton, exiButton, focButton;
     View mainView;
     boolean mBound = false;
     boolean recording = false;
-    boolean mayclick = false;
-    private int mWidth=1,mHeight=1;
-    long ExitPressTime = 0;
+    boolean mayClick = false;
+    private int mWidth = 1, mHeight = 1;
     private float mScaleFactor = 4.0f;
     private String[] mFocusNames = {"I",
             "V",
@@ -48,7 +47,7 @@ public class CosyDVR extends Activity{
 
             // Don't let the object get too small or too large.
             mScaleFactor = Math.max(4.0f, Math.min(mScaleFactor, 14.0f));
-            if(mBound) {
+            if (mBound) {
                 mService.setZoom(mScaleFactor);
             }
             return true;
@@ -75,7 +74,6 @@ public class CosyDVR extends Activity{
         favButton = (Button)findViewById(R.id.fav_button);
         recButton = (Button)findViewById(R.id.rec_button);
         focButton = (Button)findViewById(R.id.foc_button);
-        nigButton = (Button)findViewById(R.id.nig_button);
         flsButton = (Button)findViewById(R.id.fls_button);
         exiButton = (Button)findViewById(R.id.exi_button);
         mainView = findViewById(R.id.mainview);
@@ -83,11 +81,9 @@ public class CosyDVR extends Activity{
         favButton.setOnClickListener(favButtonOnClickListener);
         recButton.setOnClickListener(recButtonOnClickListener);
         focButton.setOnClickListener(focButtonOnClickListener);
-        nigButton.setOnClickListener(nigButtonOnClickListener);
         flsButton.setOnClickListener(flsButtonOnClickListener);
         exiButton.setOnLongClickListener(exiButtonOnLongClickListener);
         recButton.setOnLongClickListener(recButtonOnLongClickListener);
-        nigButton.setOnLongClickListener(nigButtonOnLongClickListener);
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         final ScaleGestureDetector mScaleDetector = new ScaleGestureDetector(this, new ScaleListener());
@@ -97,30 +93,28 @@ public class CosyDVR extends Activity{
                 mScaleDetector.onTouchEvent(event);
                 //Extra analysis for single tap detection. Swipes are detected as autofocus too for now
                 int action = event.getAction() & MotionEvent.ACTION_MASK;
-                switch(action) {
+                switch (action) {
                     case MotionEvent.ACTION_DOWN : {
-                        mayclick = true;	//first finger touch is like click
+                        mayClick = true;	// First finger = OK click
                         break;
                     }
                     case MotionEvent.ACTION_POINTER_DOWN : {
-                        mayclick = false;	//second finger is not click
+                        mayClick = false;	// Second finger is not a click anymore
                         break;
                     }
                     case MotionEvent.ACTION_UP : {
-                        if(mayclick) {		//first finger up. check if it was single one
-                            if(mBound) {
+                        if (mayClick) {
+                            if (mBound) {
                                 mService.autoFocus();
                             }
                         }
-                        mayclick = false;
+                        mayClick = false;
                     }
                 }
                 return true;
             }
 
         });
-
-
     }
 
     @Override
@@ -133,7 +127,7 @@ public class CosyDVR extends Activity{
             mWidth = size.x;
             mHeight = size.y - favButton.getHeight();
 
-            Intent intent = new Intent(/*CosyDVR.this*/getApplicationContext(), BackgroundVideoRecorder.class);
+            Intent intent = new Intent(getApplicationContext(), BackgroundVideoRecorder.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             startService(intent);
             bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
@@ -141,7 +135,7 @@ public class CosyDVR extends Activity{
     }
 
     @Override
-    public void onDestroy(){
+    public void onDestroy() {
         if (mBound) {
             unbindService(mConnection);
             mBound = false;
@@ -151,7 +145,7 @@ public class CosyDVR extends Activity{
 
     @Override
     public void onPause(){
-        if(mBound) {
+        if (mBound) {
             mService.ChangeSurface(1, 1);
         }
         super.onPause();
@@ -160,7 +154,7 @@ public class CosyDVR extends Activity{
 
     @Override
     public void onResume(){
-        if(mBound) {
+        if (mBound) {
             mService.ChangeSurface(mWidth, mHeight);
         }
         super.onResume();
@@ -168,13 +162,12 @@ public class CosyDVR extends Activity{
     }
 
     public void updateInterface(){
-        if(mBound) {
-            if(mService.isRecording()) {
+        if (mBound) {
+            if (mService.isRecording()) {
                 recButton.setText(getString(R.string.stop));
             } else {
                 recButton.setText(getString(R.string.start));
             }
-
         }
     }
 
@@ -204,21 +197,9 @@ public class CosyDVR extends Activity{
             = new Button.OnClickListener(){
         @Override
         public void onClick(View v) {
-// TODO Auto-generated method stub
-            if(mBound) {
+            if (mBound) {
                 mService.toggleFocus();
                 focButton.setText(getString(R.string.focus) + " [" + mFocusNames[mService.getFocusMode()] + "]");
-            }
-        }};
-
-
-    Button.OnClickListener nigButtonOnClickListener
-            = new Button.OnClickListener(){
-        @Override
-        public void onClick(View v) {
-// TODO Auto-generated method stub
-            if(mBound) {
-                mService.toggleNight();
             }
         }};
 
@@ -226,8 +207,7 @@ public class CosyDVR extends Activity{
             = new Button.OnClickListener(){
         @Override
         public void onClick(View v) {
-// TODO Auto-generated method stub
-            if(mBound) {
+            if (mBound) {
                 mService.toggleFlash();
             }
         }};
@@ -236,7 +216,6 @@ public class CosyDVR extends Activity{
             = new Button.OnLongClickListener(){
         @Override
         public boolean onLongClick(View v) {
-// TODO Auto-generated method stub
             mService.ChangeSurface(1, 1);
             Intent myIntent = new Intent(getApplicationContext(), CosyDVRPreferenceActivity.class);
             startActivity(myIntent);
@@ -244,24 +223,13 @@ public class CosyDVR extends Activity{
             return true;
         }};
 
-    Button.OnLongClickListener nigButtonOnLongClickListener
-            = new Button.OnLongClickListener(){
-        @Override
-        public boolean onLongClick(View v) {
-            if(mBound) {
-                //mService.toggleTimeLapse();
-            }
-            return true;
-        }};
-
     Button.OnLongClickListener exiButtonOnLongClickListener
             = new Button.OnLongClickListener(){
         @Override
         public boolean onLongClick(View v) {
-// TODO Auto-generated method stub
-/*	if(SystemClock.elapsedRealtime() > (ExitPressTime + 1000)
+/*	if (SystemClock.elapsedRealtime() > (ExitPressTime + 1000)
 	   && SystemClock.elapsedRealtime() < (ExitPressTime + 2000)) {
-		if(mBound) {
+		if (mBound) {
 			unbindService(CosyDVR.this.mConnection);
 			CosyDVR.this.mBound = false;
 		}
@@ -272,7 +240,7 @@ public class CosyDVR extends Activity{
 		ExitPressTime = SystemClock.elapsedRealtime();
 		//Toast.makeText(CosyDVR.this, R.string.exit_again, Toast.LENGTH_LONG).show();
 	}*/
-            if(mBound) {
+            if (mBound) {
                 unbindService(CosyDVR.this.mConnection);
                 CosyDVR.this.mBound = false;
             }
@@ -281,7 +249,6 @@ public class CosyDVR extends Activity{
             return true;
         }};
 
-    /** Defines callbacks for service binding, passed to bindService() */
     private ServiceConnection mConnection = new ServiceConnection() {
 
         @Override
@@ -291,7 +258,7 @@ public class CosyDVR extends Activity{
             BackgroundVideoRecorder.LocalBinder binder = (BackgroundVideoRecorder.LocalBinder) service;
             mService = binder.getService();
             mBound = true;
-        /*if(!mService.isRecording()){
+        /*if (!mService.isRecording()){
        	 	//stopService(new Intent(CosyDVR.this, BackgroundVideoRecorder.class));
        	 	recButton.setText(getString(R.string.rec));
         }else{

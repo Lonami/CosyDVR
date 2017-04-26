@@ -6,7 +6,6 @@
     <string name="stop">STOP</string>
     <string name="focus">FOCUS</string>
     <string name="flash">FLASH</string>
-    <string name="night">NIGHT</string>
     <string name="exit">EXIT</string>
     <string name="gps_off">GPS OFF</string>
     <string name="max_duration_reached">Maximum recording duration reached. Stopped recording</string>

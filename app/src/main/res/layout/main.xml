@@ -47,16 +47,6 @@
             android:textSize="12sp" />
 
         <Button
-            android:id="@+id/nig_button"
-            style="android:buttonBarStyle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="@drawable/gray_button"
-            android:text="@string/night"
-            android:textSize="12sp" />
-
-        <Button
             android:id="@+id/fls_button"
             style="android:buttonBarStyle"
             android:layout_width="match_parent"

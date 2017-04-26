@@ -96,11 +96,6 @@
                         android:title="@string/focus"
                         android:summary="Switches focus mode.\n I - Infinity Focus\n V - continuous video\n A - Auto (manual focus)\n M - Macro (manual focus)\n E - Extended Depth of Field" />
                         <Preference
-                        android:key="instruction_night"
-                        android:selectable="false"
-                        android:title="@string/night"
-                        android:summary="Day/Night mode.\nLong press = Time Compression Function works according to preferences TimeLapseFactor value." />
-                        <Preference
                         android:key="instruction_flash"
                         android:selectable="false"
                         android:title="@string/flash"
