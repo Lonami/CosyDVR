@@ -4,8 +4,8 @@
         <PreferenceCategory
         android:title="Preferences">
 		<CheckBoxPreference 
-		android:key="autostart_recording"
-		android:title="Autostart Recording"
+		android:key="auto_start_recording"
+		android:title="Auto-start Recording"
 		android:summary="Automatically start recording upon program launch"
 		android:defaultValue="false"
 		android:enabled="true" />
@@ -125,6 +125,6 @@
                 android:key="instruction_about"
                 android:selectable="false"
                 android:title="About"
-                android:summary="Glory to Ukraine!\nWeb site: cosydvr.esy.es\ne-mail: serg_stetsuk@ukr.net\nLicence: GPLv3" />
+                android:summary="Modified by Lonami\nWebsite: lonamiwebs.github.io\nLicence: GPLv3" />
         </PreferenceCategory>
 </PreferenceScreen>

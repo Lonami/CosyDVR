@@ -6,7 +6,6 @@ import android.app.Notification;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
 import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.WindowManager;
@@ -42,7 +41,6 @@ import java.lang.String;
 //import java.net.UnknownHostException;
 
 import android.os.PowerManager;
-import android.preference.PreferenceManager;
 
 public class BackgroundVideoRecorder extends Service implements
         SurfaceHolder.Callback, MediaRecorder.OnInfoListener {
@@ -111,6 +109,8 @@ public class BackgroundVideoRecorder extends Service implements
     private String[] mFlashModes = { Parameters.FLASH_MODE_OFF,
             Parameters.FLASH_MODE_TORCH, };
 
+    private CosySettings settings;
+
     // some troubles with video files @SuppressLint("HandlerLeak")
     private final class HandlerExtension extends Handler {
         public void handleMessage(Message msg) {
@@ -168,13 +168,11 @@ public class BackgroundVideoRecorder extends Service implements
 
     @Override
     public void onCreate() {
-        // read first time shared preferences
-        SharedPreferences sharedPref = PreferenceManager
-                .getDefaultSharedPreferences(this);
-        AUTO_START = sharedPref.getBoolean("autostart_recording", false);
-        REVERSE_ORIENTATION = sharedPref.getBoolean("reverse_landscape", false);
-        SD_CARD_PATH = sharedPref.getString("sd_card_path", Environment
-                .getExternalStorageDirectory().getAbsolutePath());
+        settings = new CosySettings(this);
+
+        AUTO_START = settings.getAutoStart();
+        REVERSE_ORIENTATION = settings.getReverseLandscape();
+        SD_CARD_PATH = settings.getSdCardPath();
 
         // Start foreground service to avoid unexpected kill
 
@@ -280,7 +278,7 @@ public class BackgroundVideoRecorder extends Service implements
 
     public void UpdateLayoutInterface() {
         Intent intent = new Intent();
-        intent.setAction("es.esy.CosyDVR.updateinterface");
+        intent.setAction("es.esy.CosyDVR.updateInterface");
         sendBroadcast(intent);
     }
 
@@ -296,28 +294,17 @@ public class BackgroundVideoRecorder extends Service implements
 
     public void StartRecording() {
 		/* Rereading preferences */
-        SharedPreferences sharedPref = PreferenceManager
-                .getDefaultSharedPreferences(this);
-        MAX_VIDEO_BIT_RATE = Integer.parseInt(sharedPref.getString(
-                "video_bitrate", "5000000"));
-        VIDEO_WIDTH = Integer.parseInt(sharedPref.getString("video_width",
-                "1280"));
-        VIDEO_HEIGHT = Integer.parseInt(sharedPref.getString("video_height",
-                "720"));
-        VIDEO_FRAME_RATE = Integer.parseInt(sharedPref.getString("video_frame_rate",
-                "30"));
-        TIME_LAPSE_FACTOR = (timeLapseMode ==0) ? 1: Integer.parseInt(sharedPref.getString("time_lapse_factor",
-                "1"));
-        MAX_VIDEO_DURATION = Integer.parseInt(sharedPref.getString(
-                "video_duration", "600000"));
-        MAX_TEMP_FOLDER_SIZE = Integer.parseInt(sharedPref.getString(
-                "max_temp_folder_size", "600000"));
-        MIN_FREE_SPACE = Integer.parseInt(sharedPref.getString(
-                "min_free_space", "600000"));
-        SD_CARD_PATH = sharedPref.getString("sd_card_path", Environment
-                .getExternalStorageDirectory().getAbsolutePath());
+		MAX_VIDEO_BIT_RATE = settings.getMaxVideoBitRate();
+        VIDEO_WIDTH = settings.getVideoWidth();
+        VIDEO_HEIGHT = settings.getVideoHeight();
+        VIDEO_FRAME_RATE = settings.getVideoFrameRate();
+        TIME_LAPSE_FACTOR = settings.getTimeLapseFactor();
+        MAX_VIDEO_DURATION = settings.getMaxVideoDuration();
+        MAX_TEMP_FOLDER_SIZE = settings.getMaxTempFolderSize();
+        MIN_FREE_SPACE = settings.getMinFreeSpace();
+        SD_CARD_PATH = settings.getSdCardPath();
 
-        // create temp and fav folders
+        // Create temp and favourite folders
         File mFolder = new File(SD_CARD_PATH + BASE_FOLDER + TEMP_FOLDER); //"/CosyDVR/temp/");
         if (!mFolder.exists()) {
             if (!mFolder.mkdirs())
@@ -329,10 +316,10 @@ public class BackgroundVideoRecorder extends Service implements
                 Log.w("BackgroundVideoRecorder", "Could not create "+mFolder);
         }
 
-        //first of all make sure we have enough free space
+        // First of all make sure we have enough free space
         freeSpace();
 
-		/* start */
+		// Start
         OpenUnlockPrepareStart();
         applyCameraParameters();
         mSrtCounter = 0;
@@ -400,42 +387,19 @@ public class BackgroundVideoRecorder extends Service implements
                 mediaRecorder.setVideoEncodingBitRate(this.MAX_VIDEO_BIT_RATE);
                 mediaRecorder.setVideoSize(this.VIDEO_WIDTH, this.VIDEO_HEIGHT);// 640x480,800x480
                 mediaRecorder.setVideoFrameRate(this.VIDEO_FRAME_RATE);
-                if(this.TIME_LAPSE_FACTOR > 1) {
+                if (this.TIME_LAPSE_FACTOR > 1) {
                     mediaRecorder.setCaptureRate(1.0 * this.VIDEO_FRAME_RATE / this.TIME_LAPSE_FACTOR);
                 }
                 currentFile = DateFormat.format("yyyy-MM-dd_kk-mm-ss",
                         new Date().getTime()).toString();
-                // if we write to file
+
+                // If we write to file
                 mediaRecorder.setOutputFile(SD_CARD_PATH + BASE_FOLDER + TEMP_FOLDER //"/CosyDVR/temp/"
                         + currentFile + VIDEO_FILE_EXT);
-                // if we stream
-				/*
-				 * String hostname =
-				 * "rtmp://a.rtmp.youtube.com/stetsuk.80gq-20ea-tet3-2hfb"; int
-				 * port = 1234; Socket socket; try { socket = new
-				 * Socket(InetAddress.getByName(hostname), port);
-				 * ParcelFileDescriptor pfd =
-				 * ParcelFileDescriptor.fromSocket(socket);
-				 * mediaRecorder.setOutputFile(pfd.getFileDescriptor()); } catch
-				 * (UnknownHostException e1) { // TODO Auto-generated catch
-				 * block e1.printStackTrace(); } catch (IOException e1) { //
-				 * TODO Auto-generated catch block e1.printStackTrace(); }
-				 */
 
-				/*
-				 * mediaRecorder.setAudioChannels(CamcorderProfile.get(
-				 * CamcorderProfile.QUALITY_HIGH).audioChannels);
-				 * mediaRecorder.setAudioSamplingRate
-				 * (CamcorderProfile.get(CamcorderProfile
-				 * .QUALITY_HIGH).audioSampleRate);
-				 * mediaRecorder.setAudioEncodingBitRate
-				 * (CamcorderProfile.get(CamcorderProfile
-				 * .QUALITY_HIGH).audioBitRate);
-				 */
-
-                // Step 5: Set the preview output
+                // Step 4: Set the preview output
                 mediaRecorder.setPreviewDisplay(mSurfaceHolder.getSurface());
-                // Step 6: Duration and listener
+                // Step 5: Duration and listener
                 mediaRecorder.setMaxDuration(this.MAX_VIDEO_DURATION);
                 mediaRecorder.setMaxFileSize(0); // 0 - no limit
                 mediaRecorder.setOnInfoListener(this);
@@ -457,8 +421,8 @@ public class BackgroundVideoRecorder extends Service implements
 
     public void freeSpace() {
         File dir = new File(SD_CARD_PATH + BASE_FOLDER + TEMP_FOLDER); //"/CosyDVR/temp/");
-        File[] filelist = dir.listFiles();
-        Arrays.sort(filelist, new Comparator<File>() {
+        File[] fileList = dir.listFiles();
+        Arrays.sort(fileList, new Comparator<File>() {
             public int compare(File f1, File f2) {
                 return Long.valueOf(f2.lastModified()).compareTo(
                         f1.lastModified());
@@ -466,26 +430,18 @@ public class BackgroundVideoRecorder extends Service implements
         });
         long totalSize = 0; // in kB
         int i;
-        for (i = 0; i < filelist.length; i++) {
-            totalSize += filelist[i].length() / 1024;
+        for (i = 0; i < fileList.length; i++) {
+            totalSize += fileList[i].length() / 1024;
         }
-        i = filelist.length - 1;
-        // if(Build.VERSION.SDK_INT >= 11) {
+        i = fileList.length - 1;
         while (i > 0
                 && (totalSize > this.MAX_TEMP_FOLDER_SIZE
                 || dir.getFreeSpace() < this.MIN_FREE_SPACE)) {
-            totalSize -= filelist[i].length() / 1024;
-            if (!filelist[i].delete())
-                Log.w("BackgroundVideoRecorder", "Could not delete "+filelist[i]);
+            totalSize -= fileList[i].length() / 1024;
+            if (!fileList[i].delete())
+                Log.w("BackgroundVideoRecorder", "Could not delete "+fileList[i]);
             i--;
         }
-        // } else {
-        // while (i > 0 && totalSize > this.MAX_TEMP_FOLDER_SIZE) {
-        // totalSize -= filelist[i].length()/1024;
-        // filelist[i].delete();
-        // i--;
-        // }
-        // }
     }
 
     public void autoFocus() {
@@ -637,9 +593,9 @@ public class BackgroundVideoRecorder extends Service implements
     private int getBatteryLevel(Context context) {
         int batteryLevel = 0;
         try {
-            IntentFilter ifilter = new IntentFilter(
+            IntentFilter intentFilter = new IntentFilter(
                     Intent.ACTION_BATTERY_CHANGED);
-            Intent batteryStatus = context.registerReceiver(null, ifilter);
+            Intent batteryStatus = context.registerReceiver(null, intentFilter);
             if (batteryStatus == null)
                 return -1;
 
