@@ -191,7 +191,7 @@ public class CosyDVR extends Activity{
         public void onClick(View v) {
             mService.setMute(true);
             if (mService.isRecording()) {
-                mService.StopRecording();
+                mService.stopRecording();
                 recButton.setText(getString(R.string.start));
             } else {
                 mService.StartRecording();

@@ -1,5 +1,6 @@
 package es.esy.CosyDVR;
 
+import android.annotation.SuppressLint;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.app.Notification;
@@ -45,60 +46,53 @@ import android.widget.Toast;
 
 public class BackgroundVideoRecorder extends Service implements
         SurfaceHolder.Callback, MediaRecorder.OnInfoListener {
-    // CONSTANTS-OPTIONS
+    // Settings
     public long MAX_TEMP_FOLDER_SIZE = 10000000;
     public long MIN_FREE_SPACE = 1000000;
     public int MAX_VIDEO_DURATION = 600000;
-    public int VIDEO_WIDTH = 1280;// 1920;
-    public int VIDEO_HEIGHT = 720;// 1080;
+    public int VIDEO_WIDTH = 1280;
+    public int VIDEO_HEIGHT = 720;
     public int VIDEO_FRAME_RATE = 30;
-    public int TIME_LAPSE_FACTOR = 1;
     public int MAX_VIDEO_BIT_RATE = 5000000;
-    // public int MAX_VIDEO_BIT_RATE = 256000; //=for streaming;
+
     public int REFRESH_TIME = 1000;
     public String VIDEO_FILE_EXT = ".mp4";
-    // public int AUDIO_SOURCE = CAMERA;
-    public String SD_CARD_PATH = Environment.getExternalStorageDirectory()
-            .getAbsolutePath();
-    //~ public String BASE_FOLDER = "/CosyDVR";
-    public String BASE_FOLDER = "/Android/data/es.esy.CosyDVR/files"; //possible fix for KitKat
+    public String SD_CARD_PATH =
+            Environment.getExternalStorageDirectory().getAbsolutePath();
+
+    public String BASE_FOLDER = "/Android/data/es.esy.CosyDVR/files"; // KitKat fix
     public String FAV_FOLDER = "/fav/";
     public String TEMP_FOLDER = "/temp/";
-    /*for KitKat we can use something like:
-    * final File[] dirs = context.getExternalFilesDirs(null); //null means default type
-    * //find a dir that has most of the space and save using StatFs
-    */
-    public boolean AUTO_START = false;
-    public boolean REVERSE_ORIENTATION = false;
+
+    public boolean AUTO_START;
+    public boolean REVERSE_ORIENTATION;
 
     // Binder given to clients
     private final IBinder mBinder = new LocalBinder();
-    private WindowManager windowManager = null;
-    private SurfaceView surfaceView = null;
-    private Camera camera = null;
-    private MediaRecorder mediaRecorder = null;
-    private boolean isRecording = false;
-    private int focusMode = 0;
-    private int sceneMode = 0;
-    private int flashMode = 0;
-    private int timeLapseMode = 0;
-    private int zoomFactor = 0;
-    private String currentFile = null;
+    private WindowManager windowManager;
+    private SurfaceView surfaceView;
+    private Camera camera;
+    private MediaRecorder mediaRecorder;
+    private boolean isRecording;
+    private int focusMode;
+    private int sceneMode;
+    private int flashMode;
+    private int zoomFactor;
+    private String currentFile;
 
-    private SurfaceHolder mSurfaceHolder = null;
-    private PowerManager.WakeLock mWakeLock = null;
-    private Timer mTimer = null;
-    private TimerTask mTimerTask = null;
+    private SurfaceHolder mSurfaceHolder;
+    private PowerManager.WakeLock mWakeLock;
+    private Timer mTimer;
+    private TimerTask mTimerTask;
 
-    public TextView mTextView = null;
-    public TextView mBatteryView = null;
-    public long mSrtCounter = 0;
-    public Handler mHandler = null;
+    public TextView mTextView;
+    public TextView mBatteryView;
+    public long mSrtCounter;
+    public Handler mHandler;
 
-    private long mSrtBegin = 0;
-    private long mNewFileBegin = 0;
+    private long mSrtBegin;
+    private long mNewFileBegin;
 
-    // private List<String> mFocusModes;
     private String[] mFocusModes = { Parameters.FOCUS_MODE_INFINITY,
             Parameters.FOCUS_MODE_CONTINUOUS_VIDEO, Parameters.FOCUS_MODE_AUTO,
             Parameters.FOCUS_MODE_MACRO, Parameters.FOCUS_MODE_EDOF, };
@@ -106,36 +100,36 @@ public class BackgroundVideoRecorder extends Service implements
     private String[] mSceneModes = { Parameters.SCENE_MODE_AUTO,
             Parameters.SCENE_MODE_NIGHT, };
 
-
     private String[] mFlashModes = { Parameters.FLASH_MODE_OFF,
             Parameters.FLASH_MODE_TORCH, };
 
     private CosySettings settings;
 
-    // some troubles with video files @SuppressLint("HandlerLeak")
+    @SuppressLint("HandlerLeak")
     private final class HandlerExtension extends Handler {
+        @SuppressLint("DefaultLocale")
         public void handleMessage(Message msg) {
             if (!isRecording) {
                 return;
             }
             String srt = "";
             Date datetime = new Date();
-            long tick = (mSrtBegin - mNewFileBegin)/TIME_LAPSE_FACTOR; // relative srt text begin/
+            long tick = mSrtBegin - mNewFileBegin; // relative srt text begin/
             // i.e. prev tick time
-            int hour = (int) (tick / (1000 * 60 * 60));
-            int min = (int) (tick % (1000 * 60 * 60) / (1000 * 60));
-            int sec = (int) (tick % (1000 * 60) / (1000));
+            int hour = (int) (tick / (3600000)); // 1000 * 60 * 60
+            int min = (int) (tick % (3600000) / (60000)); // 1000 * 60
+            int sec = (int) (tick % (60000) / (1000));
             int mil = (int) (tick % (1000));
             srt = srt
                     + String.format("%d\n%02d:%02d:%02d,%03d --> ",
                     mSrtCounter, hour, min, sec, mil);
 
             mSrtBegin = SystemClock.elapsedRealtime();
-            tick = (mSrtBegin - mNewFileBegin)/TIME_LAPSE_FACTOR; // relative srt text end. i.e.
+            tick = mSrtBegin - mNewFileBegin; // relative srt text end. i.e.
             // this tick time
-            hour = (int) (tick / (1000 * 60 * 60));
-            min = (int) (tick % (1000 * 60 * 60) / (1000 * 60));
-            sec = (int) (tick % (1000 * 60) / (1000));
+            hour = (int) (tick / (3600000)); // 1000 * 60 * 60
+            min = (int) (tick % (3600000) / (60000)); // 1000 * 60
+            sec = (int) (tick % (60000) / (1000));
             mil = (int) (tick % (1000));
             srt = srt
                     + String.format("%02d:%02d:%02d,%03d\n", hour, min, sec,
@@ -148,21 +142,16 @@ public class BackgroundVideoRecorder extends Service implements
 
             int bat = getBatteryLevel(getApplicationContext());
             if (bat >= 0) {
-                mBatteryView.setText(String.valueOf(bat)+"%");
+                final String battery = String.valueOf(bat) + "%";
+                mBatteryView.setText(battery);
             } else {
                 mBatteryView.setText("");
             }
         }
     }
 
-    /**
-     * Class used for the client Binder. Because we know this service always
-     * runs in the same process as its clients, we don't need to deal with IPC.
-     */
-    public class LocalBinder extends Binder {
+    class LocalBinder extends Binder {
         BackgroundVideoRecorder getService() {
-            // Return this instance of LocalService so clients can call public
-            // methods
             return BackgroundVideoRecorder.this;
         }
     }
@@ -176,21 +165,20 @@ public class BackgroundVideoRecorder extends Service implements
         SD_CARD_PATH = settings.getSdCardPath();
 
         // Start foreground service to avoid unexpected kill
-
         Intent myIntent = new Intent(this, CosyDVR.class);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0,
-                myIntent, Intent.FLAG_ACTIVITY_NEW_TASK);
+        myIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, myIntent, 0);
 
         Notification notification = new Notification.Builder(this)
                 .setContentTitle("CosyDVR Background Recorder Service")
                 .setContentText("") .setSmallIcon(R.drawable.cosydvricon)
-                .setContentIntent(pendingIntent) .build();
+                .setContentIntent(pendingIntent)
+                .build();
         startForeground(1, notification);
 
         // Create new SurfaceView, set its size to 1x1, move it to the top left
         // corner and set this service as a callback
-        windowManager = (WindowManager) this
-                .getSystemService(Context.WINDOW_SERVICE);
+        windowManager = (WindowManager)getSystemService(Context.WINDOW_SERVICE);
         surfaceView = new SurfaceView(this);
         LayoutParams layoutParams = new WindowManager.LayoutParams(
                 // WindowManager.LayoutParams.WRAP_CONTENT,
@@ -255,7 +243,7 @@ public class BackgroundVideoRecorder extends Service implements
         return isRecording;
     }
 
-    public void StopRecording() {
+    public void stopRecording() {
         if (isRecording) {
             Stop();
             ResetReleaseLock();
@@ -266,9 +254,9 @@ public class BackgroundVideoRecorder extends Service implements
             mTimerTask = null;
 
             if (currentFile != null) {
-                File tmpFile = new File(SD_CARD_PATH + BASE_FOLDER + TEMP_FOLDER // "/CosyDVR/temp/"
+                File tmpFile = new File(SD_CARD_PATH + BASE_FOLDER + TEMP_FOLDER
                         + currentFile + VIDEO_FILE_EXT);
-                File favFile = new File(SD_CARD_PATH + BASE_FOLDER + FAV_FOLDER // "/CosyDVR/fav/"
+                File favFile = new File(SD_CARD_PATH + BASE_FOLDER + FAV_FOLDER
                         + currentFile + VIDEO_FILE_EXT);
                 if (!tmpFile.renameTo(favFile))
                     Log.w("BackgroundVideoRecorder", "Could not rename "+tmpFile);
@@ -295,7 +283,6 @@ public class BackgroundVideoRecorder extends Service implements
         VIDEO_WIDTH = settings.getVideoWidth();
         VIDEO_HEIGHT = settings.getVideoHeight();
         VIDEO_FRAME_RATE = settings.getVideoFrameRate();
-        TIME_LAPSE_FACTOR = settings.getTimeLapseFactor();
         MAX_VIDEO_DURATION = settings.getMaxVideoDuration();
         MAX_TEMP_FOLDER_SIZE = settings.getMaxTempFolderSize();
         MIN_FREE_SPACE = settings.getMinFreeSpace();
@@ -332,7 +319,7 @@ public class BackgroundVideoRecorder extends Service implements
                 mHandler.obtainMessage(1).sendToTarget();
             }
         };
-        mTimer.scheduleAtFixedRate(mTimerTask, 0, REFRESH_TIME * TIME_LAPSE_FACTOR);
+        mTimer.scheduleAtFixedRate(mTimerTask, 0, REFRESH_TIME);
         UpdateLayoutInterface();
     }
 
@@ -373,20 +360,15 @@ public class BackgroundVideoRecorder extends Service implements
                 mediaRecorder.setAudioSource(MediaRecorder.AudioSource.DEFAULT);
                 mediaRecorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
 
-                // Step 3: Set a CamcorderProfile (requires API Level 8 or
-                // higher)
-                // mediaRecorder.setProfile(CamcorderProfile
-                // .get(CamcorderProfile.QUALITY_HIGH));
+                // Step 3: Set a CamcorderProfile
+                //mediaRecorder.setProfile(CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH));
                 mediaRecorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
-                mediaRecorder.setAudioEncoder(CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH).audioCodec);// MediaRecorder.AudioEncoder.HE_AAC
+                mediaRecorder.setAudioEncoder(CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH).audioCodec);
                 mediaRecorder.setVideoEncoder(MediaRecorder.VideoEncoder.H264);
 
-                mediaRecorder.setVideoEncodingBitRate(this.MAX_VIDEO_BIT_RATE);
-                mediaRecorder.setVideoSize(this.VIDEO_WIDTH, this.VIDEO_HEIGHT);// 640x480,800x480
-                mediaRecorder.setVideoFrameRate(this.VIDEO_FRAME_RATE);
-                if (this.TIME_LAPSE_FACTOR > 1) {
-                    mediaRecorder.setCaptureRate(1.0 * this.VIDEO_FRAME_RATE / this.TIME_LAPSE_FACTOR);
-                }
+                mediaRecorder.setVideoEncodingBitRate(MAX_VIDEO_BIT_RATE);
+                mediaRecorder.setVideoSize(VIDEO_WIDTH, VIDEO_HEIGHT);
+                mediaRecorder.setVideoFrameRate(VIDEO_FRAME_RATE);
                 currentFile = DateFormat.format("yyyy-MM-dd_kk-mm-ss",
                         new Date().getTime()).toString();
 
@@ -397,7 +379,7 @@ public class BackgroundVideoRecorder extends Service implements
                 // Step 4: Set the preview output
                 mediaRecorder.setPreviewDisplay(mSurfaceHolder.getSurface());
                 // Step 5: Duration and listener
-                mediaRecorder.setMaxDuration(this.MAX_VIDEO_DURATION);
+                mediaRecorder.setMaxDuration(MAX_VIDEO_DURATION);
                 mediaRecorder.setMaxFileSize(0); // 0 - no limit
                 mediaRecorder.setOnInfoListener(this);
                 if(REVERSE_ORIENTATION) {
@@ -427,17 +409,15 @@ public class BackgroundVideoRecorder extends Service implements
         });
         long totalSize = 0; // in kB
         int i;
-        for (i = 0; i < fileList.length; i++) {
+        for (i = 0; i < fileList.length; ++i)
             totalSize += fileList[i].length() / 1024;
-        }
+
         i = fileList.length - 1;
-        while (i > 0
-                && (totalSize > this.MAX_TEMP_FOLDER_SIZE
-                || dir.getFreeSpace() < this.MIN_FREE_SPACE)) {
+        while (i > 0 && (totalSize > MAX_TEMP_FOLDER_SIZE || dir.getFreeSpace() < MIN_FREE_SPACE)) {
             totalSize -= fileList[i].length() / 1024;
             if (!fileList[i].delete())
                 Log.w("BackgroundVideoRecorder", "Could not delete "+fileList[i]);
-            i--;
+            --i;
         }
     }
 
@@ -514,31 +494,22 @@ public class BackgroundVideoRecorder extends Service implements
         }
     }
 
-    public void toggleRecording() {
-        if (isRecording) {
-            StopRecording();
-        } else {
-            StartRecording();
-        }
-    }
-
     public void ChangeSurface(int width, int height) {
-        if (this.VIDEO_WIDTH / this.VIDEO_HEIGHT > width / height) {
-            height = width * this.VIDEO_HEIGHT / this.VIDEO_WIDTH;
-        } else {
-            width = height * this.VIDEO_WIDTH / this.VIDEO_HEIGHT; //debug
-        }
+        if (VIDEO_WIDTH / VIDEO_HEIGHT > width / height)
+            height = width * VIDEO_HEIGHT / VIDEO_WIDTH;
+        else
+            width = height * VIDEO_WIDTH / VIDEO_HEIGHT;
+
         LayoutParams layoutParams = new WindowManager.LayoutParams(
-                // WindowManager.LayoutParams.WRAP_CONTENT,
-                // WindowManager.LayoutParams.WRAP_CONTENT,
                 width, height, WindowManager.LayoutParams.TYPE_SYSTEM_OVERLAY,
                 WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH,
                 PixelFormat.TRANSLUCENT);
-        if (width == 1) {
+
+        if (width == 1)
             layoutParams.gravity = Gravity.START | Gravity.TOP;
-        } else {
+        else
             layoutParams.gravity = Gravity.CENTER_HORIZONTAL | Gravity.TOP;
-        }
+
         windowManager.updateViewLayout(surfaceView, layoutParams);
         if (width > 1) {
             mTextView.setVisibility(TextView.VISIBLE);
@@ -552,7 +523,7 @@ public class BackgroundVideoRecorder extends Service implements
     // Stop isRecording and remove SurfaceView
     @Override
     public void onDestroy() {
-        StopRecording();
+        stopRecording();
 
         windowManager.removeView(surfaceView);
         windowManager.removeView(mTextView);
@@ -561,12 +532,10 @@ public class BackgroundVideoRecorder extends Service implements
 
     @Override
     public void surfaceChanged(SurfaceHolder surfaceHolder, int format,
-                               int width, int height) {
-    }
+                               int width, int height) { }
 
     @Override
-    public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
-    }
+    public void surfaceDestroyed(SurfaceHolder surfaceHolder) { }
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -577,7 +546,7 @@ public class BackgroundVideoRecorder extends Service implements
     public void onInfo(MediaRecorder mr, int what, int extra) {
         if (what == MediaRecorder.MEDIA_RECORDER_INFO_MAX_DURATION_REACHED) {
             Toast.makeText(this, R.string.max_duration_reached, Toast.LENGTH_LONG).show();
-            StopRecording();
+            stopRecording();
         }
     }
 

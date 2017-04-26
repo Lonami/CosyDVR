@@ -5,14 +5,11 @@ import android.content.SharedPreferences;
 import android.os.Environment;
 import android.preference.PreferenceManager;
 
-public class CosySettings {
-    private final Context ctx;
+class CosySettings {
     private final SharedPreferences prefs;
 
-    public CosySettings(Context context) {
-        ctx = context;
-        prefs = PreferenceManager.getDefaultSharedPreferences(ctx);
-
+    CosySettings(final Context context) {
+        prefs = PreferenceManager.getDefaultSharedPreferences(context);
     }
 
     boolean getAutoStart() {
@@ -37,10 +34,6 @@ public class CosySettings {
 
     int getVideoFrameRate() {
         return getInt("video_frame_rate", 30);
-    }
-
-    int getTimeLapseFactor() {
-        return 1;
     }
 
     int getMaxVideoDuration() {
